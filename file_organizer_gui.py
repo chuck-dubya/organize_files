@@ -2,7 +2,7 @@ import os
 import shutil
 from datetime import datetime
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 
 def organize_files():
@@ -57,6 +57,9 @@ def organize_files():
 
         shutil.move(source_path, destination_path)
 
+    # Identify and optionally delete empty folders
+    identify_empty_folders(folder_to_organize)
+
     result_label.config(text="Files organized successfully!")
 
 
@@ -67,6 +70,29 @@ def browse_folder():
 
     folder_selected = filedialog.askdirectory()
     folder_path_var.set(folder_selected)
+
+
+def identify_empty_folders(folder_path):
+    """
+    Identifies empty folders and optionally deletes them.
+    """
+
+    empty_folders = []
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        if not dirnames and not filenames:
+            empty_folders.append(dirpath)
+
+    if empty_folders:
+        delete_empty = messagebox.askyesno(
+            "Empty Folders Found",
+            f"Found {len(empty_folders)} empty folders. Do you want to delete them?",
+        )
+        if delete_empty:
+            for folder in empty_folders:
+                os.rmdir(folder)
+            result_label.config(
+                text=f"Files organized and {len(empty_folders)} empty folders deleted."
+            )
 
 
 # Create the main window
