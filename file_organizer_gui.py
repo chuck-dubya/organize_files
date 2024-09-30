@@ -17,15 +17,19 @@ def organize_files():
         return
 
     for filename in os.listdir(folder_to_organize):
-        # Ignore folders
-        if os.path.isdir(os.path.join(folder_to_organize, filename)):
+        file_path = os.path.join(folder_to_organize, filename)
+
+        # Ignore folders, symlinks, and Windows shortcuts (.lnk files)
+        if (
+            os.path.isdir(file_path)
+            or os.path.islink(file_path)
+            or filename.lower().endswith(".lnk")
+        ):
             continue
 
         # Get file extension and creation date
         file_extension = os.path.splitext(filename)[1][1:].lower()
-        file_creation_time = os.path.getctime(
-            os.path.join(folder_to_organize, filename)
-        )
+        file_creation_time = os.path.getctime(file_path)
         file_creation_date = datetime.fromtimestamp(file_creation_time).strftime(
             "%Y-%m-%d"
         )
@@ -40,7 +44,6 @@ def organize_files():
             os.makedirs(destination_subfolder)
 
         # Move file to destination
-        source_path = os.path.join(folder_to_organize, filename)
         destination_path = os.path.join(destination_subfolder, filename)
 
         # Handle potential filename conflicts
@@ -55,7 +58,12 @@ def organize_files():
                 destination_subfolder, f"{base_filename}_{i}{ext}"
             )
 
-        shutil.move(source_path, destination_path)
+        shutil.move(file_path, destination_path)
+
+    # Identify and optionally delete empty folders
+    identify_empty_folders(folder_to_organize)
+
+    result_label.config(text="Files organized successfully!")
 
     # Identify and optionally delete empty folders
     identify_empty_folders(folder_to_organize)
